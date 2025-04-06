@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - فروشگاه آنلاین{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-image {
+        max-height: 400px;
+        object-fit: contain;
+    }
+    .product-details {
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'products:home' %}">خانه</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'products:category_detail' product.category.slug %}">{{ product.category.name }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="row product-details mb-5">
+    <div class="col-md-6">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid product-image">
+        {% else %}
+        <img src="https://via.placeholder.com/600x400?text={{ product.name }}" alt="{{ product.name }}" class="img-fluid">
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <h1 class="mb-3">{{ product.name }}</h1>
+        <p class="text-muted mb-3">دسته‌بندی: <a href="{% url 'products:category_detail' product.category.slug %}">{{ product.category.name }}</a></p>
+        <div class="mb-3">
+            <span class="price fs-3">{{ product.price }} تومان</span>
+        </div>
+        <div class="mb-4">
+            {% if product.stock > 0 %}
+            <span class="badge bg-success">موجود در انبار</span>
+            <span class="text-muted">{{ product.stock }} عدد</span>
+            {% else %}
+            <span class="badge bg-danger">ناموجود</span>
+            {% endif %}
+        </div>
+        <div class="mb-4">
+            <h5>توضیحات:</h5>
+            <p>{{ product.description }}</p>
+        </div>
+        {% if product.stock > 0 %}
+        <div class="d-flex align-items-center mb-4">
+            <div class="input-group me-3" style="max-width: 150px;">
+                <button class="btn btn-outline-secondary" type="button" id="decrease-qty">-</button>
+                <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="{{ product.stock }}">
+                <button class="btn btn-outline-secondary" type="button" id="increase-qty">+</button>
+            </div>
+            <button class="btn btn-primary btn-lg" id="add-to-cart">
+                <i class="fas fa-shopping-cart me-2"></i> افزودن به سبد خرید
+            </button>
+        </div>
+        {% endif %}
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-outline-primary" id="add-to-wishlist">
+                <i class="far fa-heart me-2"></i> افزودن به علاقه‌مندی‌ها
+            </button>
+            <button class="btn btn-outline-primary" id="share-product">
+                <i class="fas fa-share-alt me-2"></i> اشتراک‌گذاری
+            </button>
+        </div>
+    </div>
+</div>
+
+<h3 class="mb-4">محصولات مرتبط</h3>
+<div class="row">
+    {% for related in related_products %}
+    <div class="col-md-3 mb-4">
+        <div class="card product-card h-100">
+            {% if related.image %}
+            <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.name }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <img src="https://via.placeholder.com/300x200?text={{ related.name }}" class="card-img-top" alt="{{ related.name }}">
+            {% endif %}
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">{{ related.name }}</h5>
+                <p class="card-text text-muted">{{ related.description|truncatechars:60 }}</p>
+                <div class="mt-auto">
+                    <p class="price">{{ related.price }} تومان</p>
+                    <a href="{% url 'products:product_detail' related.slug %}" class="btn btn-primary w-100">مشاهده محصول</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantity');
+        const increaseBtn = document.getElementById('increase-qty');
+        const decreaseBtn = document.getElementById('decrease-qty');
+        const addToCartBtn = document.getElementById('add-to-cart');
+        const addToWishlistBtn = document.getElementById('add-to-wishlist');
+        const shareProductBtn = document.getElementById('share-product');
+        
+        if (increaseBtn && decreaseBtn && quantityInput) {
+            increaseBtn.addEventListener('click', function() {
+                const currentValue = parseInt(quantityInput.value);
+                const maxValue = parseInt(quantityInput.getAttribute('max'));
+                if (currentValue < maxValue) {
+                    quantityInput.value = currentValue + 1;
+                }
+            });
+            
+            decreaseBtn.addEventListener('click', function() {
+                const currentValue = parseInt(quantityInput.value);
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                }
+            });
+        }
+        
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', function() {
+                const quantity = parseInt(quantityInput.value);
+                alert(`محصول "${document.querySelector('h1').textContent}" به تعداد ${quantity} عدد به سبد خرید اضافه شد.`);
+                // در اینجا می‌توانید کد اضافه کردن به سبد خرید را با استفاده از API اضافه کنید
+            });
+        }
+        
+        if (addToWishlistBtn) {
+            addToWishlistBtn.addEventListener('click', function() {
+                alert(`محصول "${document.querySelector('h1').textContent}" به لیست علاقه‌مندی‌ها اضافه شد.`);
+                // در اینجا می‌توانید کد اضافه کردن به لیست علاقه‌مندی‌ها را با استفاده از API اضافه کنید
+            });
+        }
+        
+        if (shareProductBtn) {
+            shareProductBtn.addEventListener('click', function() {
+                if (navigator.share) {
+                    navigator.share({
+                        title: document.querySelector('h1').textContent,
+                        url: window.location.href
+                    })
+                    .catch(error => console.log('خطا در اشتراک‌گذاری:', error));
+                } else {
+                    alert(`لینک محصول: ${window.location.href}`);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+

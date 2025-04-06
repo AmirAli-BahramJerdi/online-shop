@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}فروشگاه آنلاین - محصولات{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-3">
+      <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">دسته‌بندی‌ها</h5>
+          </div>
+          <div class="card-body">
+              <div class="list-group">
+                  <a href="{% url 'products:product_list' %}" class="list-group-item list-group-item-action {% if not current_category %}active{% endif %}">
+                      همه محصولات
+                  </a>
+                  {% for category in categories %}
+                  <a href="{% url 'products:product_list' %}?category={{ category.slug }}" 
+                     class="list-group-item list-group-item-action {% if current_category == category.slug %}active{% endif %}">
+                      {{ category.name }}
+                  </a>
+                  {% endfor %}
+              </div>
+          </div>
+      </div>
+
+      <div class="card">
+          <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">فیلتر قیمت</h5>
+          </div>
+          <div class="card-body">
+              <form action="{% url 'products:product_list' %}" method="get">
+                  {% if current_category %}
+                  <input type="hidden" name="category" value="{{ current_category }}">
+                  {% endif %}
+                  {% if search_query %}
+                  <input type="hidden" name="q" value="{{ search_query }}">
+                  {% endif %}
+                  
+                  <div class="form-check mb-2">
+                      <input class="form-check-input" type="radio" name="sort" id="sort_newest" value="newest" 
+                             {% if current_sort == 'newest' or not current_sort %}checked{% endif %}>
+                      <label class="form-check-label" for="sort_newest">
+                          جدیدترین
+                      </label>
+                  </div>
+                  <div class="form-check mb-2">
+                      <input class="form-check-input" type="radio" name="sort" id="sort_price_low" value="price_low"
+                             {% if current_sort == 'price_low' %}checked{% endif %}>
+                      <label class="form-check-label" for="sort_price_low">
+                          ارزان‌ترین
+                      </label>
+                  </div>
+                  <div class="form-check mb-3">
+                      <input class="form-check-input" type="radio" name="sort" id="sort_price_high" value="price_high"
+                             {% if current_sort == 'price_high' %}checked{% endif %}>
+                      <label class="form-check-label" for="sort_price_high">
+                          گران‌ترین
+                      </label>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100">اعمال فیلتر</button>
+              </form>
+          </div>
+      </div>
+  </div>
+
+  <div class="col-md-9">
+      {% if search_query %}
+      <div class="alert alert-info mb-4">
+          نتایج جستجو برای: <strong>{{ search_query }}</strong>
+      </div>
+      {% endif %}
+
+      <div class="row">
+          {% for product in page_obj %}
+          <div class="col-md-4 mb-4">
+              <div class="card product-card h-100">
+                  {% if product.image %}
+                  <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 200px; object-fit: cover;">
+                  {% else %}
+                  <img src="https://via.placeholder.com/300x200?text={{ product.name }}" class="card-img-top" alt="{{ product.name }}">
+                  {% endif %}
+                  <div class="card-body d-flex flex-column">
+                      <h5 class="card-title">{{ product.name }}</h5>
+                      <p class="card-text text-muted">{{ product.description|truncatechars:60 }}</p>
+                      <div class="mt-auto">
+                          <p class="price">{{ product.price }} تومان</p>
+                          <a href="{% url 'products:product_detail' product.slug %}" class="btn btn-primary w-100">مشاهده محصول</a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          {% empty %}
+          <div class="col-12">
+              <div class="alert alert-warning">
+                  محصولی یافت نشد!
+              </div>
+          </div>
+          {% endfor %}
+      </div>
+
+      {% if page_obj.has_other_pages %}
+      <nav aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                  </a>
+              </li>
+              {% else %}
+              <li class="page-item disabled">
+                  <a class="page-link" href="#" aria-label="Previous">
+                      <span aria-hidden="true">&laquo;</span>
+                  </a>
+              </li>
+              {% endif %}
+
+              {% for i in page_obj.paginator.page_range %}
+              <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                  <a class="page-link" href="?page={{ i }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">{{ i }}</a>
+              </li>
+              {% endfor %}
+
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                  <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                  </a>
+              </li>
+              {% else %}
+              <li class="page-item disabled">
+                  <a class="page-link" href="#" aria-label="Next">
+                      <span aria-hidden="true">&raquo;</span>
+                  </a>
+              </li>
+              {% endif %}
+          </ul>
+      </nav>
+      {% endif %}
+  </div>
+</div>
+{% endblock %}
+
