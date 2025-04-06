@@ -36,7 +36,6 @@ git clone https://github.com/AmirAli-BahramJerdi/online-shop.git
 cd shop-project
 
 # 2. ساخت محیط مجازی
-```bash
 python -m venv venv
 source venv/bin/activate  # Linux/MacOS
 venv\Scripts\activate     # Windows
